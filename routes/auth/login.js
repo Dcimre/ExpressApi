@@ -9,7 +9,7 @@ const AppError = require('../../AppError');
 
 router.post('/login', async (req, res, next)=>{
 
-  // VALIDATE THE USER (JOI)
+  // VALIDATE THE USER
   
   const {error} = loginValidation(req.body);
   if (error){
@@ -21,14 +21,14 @@ router.post('/login', async (req, res, next)=>{
   
   const user = await User.findOne({email: req.body.email});
   if (!user){
-    return next(new AppError('wrong email', 404));
+    return next(new AppError('invalid email or password', 401));
   }
   
   // PASSWORD COMPARE
   
   const validPass = await bcrypt.compare(req.body.password, user.password);
   if (!validPass){
-    return next(new AppError('Invalid password', 404));
+    return next(new AppError('Invalid email, or password', 401));
 
   }
   // SIGN TOKEN TO USER
@@ -42,11 +42,11 @@ router.post('/login', async (req, res, next)=>{
       role: user.role
     }, process.env.TOKEN_SECRET);
   
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    return next(new AppError(`some error happened. Details ${err.message}: `, 400));
   }
-  
-  return res.status(200).send({body: user, token: jwtToken, message:'LOGGED IN!'});
+
+  return res.status(200).set('Bearer-token', jwtToken).send({body: user, message:'LOGGED IN!'});
 });
    
 module.exports = router;

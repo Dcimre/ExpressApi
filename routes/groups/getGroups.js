@@ -1,10 +1,11 @@
 const router = require ('express').Router();
 const verify = require ('../verifyToken');
 const Group  = require ('../../model/Group');
+const AppError = require('../../AppError');
 
 //GET GROUPS
 
-router.get('/',verify(['admin','user']), async (req,res)=> {
+router.get('/',verify(['admin','user']), async (req,res,next)=> {
 
   let search = req.query.search;
 
@@ -86,7 +87,7 @@ router.get('/',verify(['admin','user']), async (req,res)=> {
     return res.status(200).send({body: data, message: 'request succesfull!'});
   }
   catch(err){
-    return res.status(400).send({body:'cannot get events'});
+    return next(new AppError(`request failed. error message: ${err.message}`,400));
   }
     
 });

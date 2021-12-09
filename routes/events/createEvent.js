@@ -12,7 +12,7 @@ router.post('/', verify(['admin','user']), async (req,res,next)=>{
   
   const eventExist = await Event.findOne({name: req.body.name});
   if (eventExist){
-    return next(new AppError('Event already created', 404));
+    return next(new AppError('Event already created', 409));
   }
 
   // CREATE EVENT DATA
@@ -31,8 +31,7 @@ router.post('/', verify(['admin','user']), async (req,res,next)=>{
 
     // SAVE EVENT TO DATABASE
       
-    const d = await Event.create(data);
-    console.log('event saved succesfully');  
+    const d = await Event.create(data); 
 
     // PUSH EVENT INTO THE CREATORS MODEL
 
@@ -49,7 +48,7 @@ router.post('/', verify(['admin','user']), async (req,res,next)=>{
   catch(err){
       
     console.log('failed to save event', err);
-    return next(new AppError('Failed to create event', 404));
+    return next(new AppError(`Failed to create event... error: ${err.mrsage}`, 400));
   }
 });
   

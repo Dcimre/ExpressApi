@@ -3,8 +3,10 @@ const verify = require ('../verifyToken');
 const Event = require('../../model/Event');
 const u = require('../../utils');
 const User = require('../../model/User');
+const AppError = require('../../AppError');
 
-router.delete('/', verify(['user']), async (req,res)=>{
+
+router.delete('/', verify(['user']), async (req,res, next)=>{
 
   // DELETE EVENT
 
@@ -17,7 +19,7 @@ router.delete('/', verify(['user']), async (req,res)=>{
 
   if(!event.length){
 
-    return res.status(400).send({body: 'invalid Event Id'});
+    return next(new AppError('Event not found', 404));
   }
 
   //USER IS ADMIN OR ORGANIZER
@@ -27,7 +29,7 @@ router.delete('/', verify(['user']), async (req,res)=>{
 
   if(!organizer.length || !role.includes('admin')){
 
-    return res.status(400).send({body: 'You are not allowed to delete this event'});
+    return next(new AppError('You are not allowed to delete this event', 403));
   }
 
 
@@ -49,7 +51,7 @@ router.delete('/', verify(['user']), async (req,res)=>{
   catch(err){
       
     console.log('failed to remove event', err);
-    return res.status(400).send({body: err.message});
+    return next(new AppError(`some error happened... error mesage: ${err.message}`, 400));
   }
 });
   

@@ -2,9 +2,9 @@ const router = require ('express').Router();
 const verify = require ('../verifyToken');
 const User = require('../../model/User');
 const Event = require('../../model/Event');
+const AppError = require('../../AppError');
 
-router.patch('/', verify(['admin','user']), async (req,res)=>{
-
+router.patch('/', verify(['admin','user']), async (req,res,next)=>{
 
   // DEFINE EVENT
 
@@ -12,7 +12,7 @@ router.patch('/', verify(['admin','user']), async (req,res)=>{
 
   if(!event.length){
 
-    return res.status(400).send({body: 'invalid Event Id'});
+    return next(new AppError('invalid Event Id', 400));
   }
 
   console.log('selected event: ', event[0].name);
@@ -25,9 +25,8 @@ router.patch('/', verify(['admin','user']), async (req,res)=>{
 
   if(!userInEvent.length){
 
-    return res.status(400).send({body: 'You are not part of this event'});
+    return next(new AppError('You are not part of this event', 400));
   }
-
 
   try{ 
 
@@ -48,9 +47,7 @@ router.patch('/', verify(['admin','user']), async (req,res)=>{
       
   }
   catch(err){
-      
-    console.log('failed to remove event', err);
-    return res.status(400).send({body: err.message});
+    return next(new AppError(`failed to remove event. error message: ${err.message}`, 400));
   }
 });
   

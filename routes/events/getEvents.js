@@ -1,8 +1,9 @@
 const router = require ('express').Router();
 const verify = require ('../verifyToken');
 const Event  = require ('../../model/Event');
+const AppError = require('../../AppError');
 
-router.get('/',verify(['admin','user']), async (req,res)=> {
+router.get('/',verify(['admin','user']), async (req,res,next)=> {
 
   let search = req.query.search;
 
@@ -51,19 +52,27 @@ router.get('/',verify(['admin','user']), async (req,res)=> {
 
     where._id = req.query._id;
   }
+  // console.log('where :');
+  // console.log(where);
 
   // BUILD QUERY
-
   try{
-    
     let query = await Event
       .find(where)
-      .populate('participants','name')
       .skip(offset)
       .limit(limit)
-      .sort(order);
+      .sort(order)
+      .exec();
+
+    console.log(query);
+    
+    // let query = await Event
+    //   .find(where)
+    //   .skip(offset)
+    //   .limit(limit)
+    //   .sort(order);
     let data = {
-      rows: query,
+      events: query,
       limit: req.query.limit,
       page: req.query.page
     };
@@ -72,7 +81,6 @@ router.get('/',verify(['admin','user']), async (req,res)=> {
 
     if(search && search !== '' && search !== 'undefined'){
       const searched = await Event.find({$text: {$search: search}})
-        .populate('participants','name')
         .where({ participants: req.user.userId })
         .skip(offset)
         .limit(limit)
@@ -98,9 +106,8 @@ router.get('/',verify(['admin','user']), async (req,res)=> {
   }
     
   catch(err){
-    return res.status(400).send({body:'cannot get events', err});
+    return next(new AppError(`cannot get events... ${err.message}`,400));
   }
-    
 });
 
 module.exports = router;

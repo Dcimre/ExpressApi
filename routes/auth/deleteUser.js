@@ -28,7 +28,7 @@ router.delete('/', verify(['admin']), async (req,res,next)=>{
   catch(err){
       
     console.log('failed to delete user', err);
-    return next(new AppError('failed to delete user', 404));
+    return next(new AppError('failed to delete user', 400));
   }
 });
   

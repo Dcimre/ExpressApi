@@ -14,14 +14,14 @@ router.post ('/register', async (req, res,next) => {
 
   const {error} = registerValidation(req.body); 
   if (error){
-    return res.status(400).send({body: error.details[0].message});
+    return next(new AppError('some error occured with the format. Enter valid format', 400));
   
   }
   // CHECK IF THE USER ALREADY REGISTERED 
   
   const emailExist = await User.findOne({email: req.body.email});
   if (emailExist){
-    return next(new AppError(' Email already used', 404));
+    return next(new AppError('Email already used', 400));
   }
   // HASH THE PASSWORD
 
@@ -46,7 +46,7 @@ router.post ('/register', async (req, res,next) => {
   catch(err){
         
     console.log('failed to save user', err); 
-    return next(new AppError('Registration failed', 404));
+    return next(new AppError('Registration failed', 400));
   }     
 
 });

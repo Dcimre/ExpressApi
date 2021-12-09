@@ -1,12 +1,12 @@
 const router = require ('express').Router();
 const verify = require ('../verifyToken');
 const User  = require ('../../model/User');
-
+const AppError = require('../../AppError');
 
 //GET Friends
 
 
-router.get('/',verify(['admin','user']), async (req,res)=> {
+router.get('/',verify(['admin','user']), async (req,res,next)=> {
 
   let search = req.query.search;
 
@@ -56,6 +56,8 @@ router.get('/',verify(['admin','user']), async (req,res)=> {
 
     console.log('query:' , query);
     console.log('searched for:' , where);
+    console.log('----------------------------------');
+    console.log(query.friendList);
 
     let data = {
       rows: query,
@@ -88,7 +90,7 @@ router.get('/',verify(['admin','user']), async (req,res)=> {
     return res.status(200).send({body: data, message: 'request succesful'});
   }
   catch(err){
-    return res.status(400).send({body:'cannot get friend'});
+    return next(new AppError(`cannot get friend. error message: ${err.message}`, 400));
   }
     
 });

@@ -2,9 +2,9 @@ const router = require ('express').Router();
 const verify = require ('../../routes/verifyToken');
 const FriendRequest  = require ('../../model/friendRequest');
 const User = require('../../model/User');
+const AppError = require('../../AppError');
 
-
-router.patch('/', verify(['admin','user']), async (req,res)=>{
+router.patch('/', verify(['admin','user']), async (req,res,next)=>{
 
 
   const sender = await User.findOne({email:req.body.email});
@@ -12,17 +12,17 @@ router.patch('/', verify(['admin','user']), async (req,res)=>{
 
   if (receiver._id.toString() == sender._id.toString()){
 
-    return res.status(400).send({body: 'cant confirm your own request'});
+    return next(new AppError('cant confirm your own request', 400));
   }
 
   if(!sender || !receiver){
-    return res.status(400).send({body: 'sender or receiver not found'});
+    return next(new AppError('sender or receiver not found', 403));
   }
 
   const fRequest = await FriendRequest.find({receiver:receiver._id, sender: sender._id});
 
   if(!fRequest.length){
-    return res.status(400).send({body:'request not found'});
+    return next(new AppError('request not found',400));
   }
 
   try{ 
@@ -49,7 +49,7 @@ router.patch('/', verify(['admin','user']), async (req,res)=>{
   catch(err){
           
     console.log('failed to confirm the request', err);
-    return res.status(400).send({body: err.message});
+    return next(new AppError(`failed to confirm the request. error message: ${err.message}`,400));
   }
 });
     

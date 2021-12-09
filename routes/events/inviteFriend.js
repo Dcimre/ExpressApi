@@ -4,9 +4,10 @@ const Event  = require ('../../model/Event');
 const EventRequest = require ('../../model/eventRequest');
 const User = require('../../model/User');
 const mongoose = require('mongoose');
+const AppError = require('../../AppError');
 
 
-router.post('/invite', verify(['admin','user']), async (req,res)=>{
+router.post('/invite', verify(['admin','user']), async (req,res,next)=>{
 
   
   // CHECK EVENT EXISTS
@@ -16,7 +17,7 @@ router.post('/invite', verify(['admin','user']), async (req,res)=>{
   const idIsValid = await mongoose.Types.ObjectId.isValid(eventid);
 
   if(!idIsValid){
-    return res.status(400).send({body: 'not valid eventId'});
+    return next(new AppError('invalid eventId...',404));
   }
 
   // CHECK USER IN THE EVENT (CANT INVITE OUTSIDE FROM AN EVENT)
@@ -30,7 +31,7 @@ router.post('/invite', verify(['admin','user']), async (req,res)=>{
 
   if (!checkUserInEvent.length){
 
-    return res.status(400).send({body: 'Cant invite someone from outside'});
+    return next(new AppError('Cant invite someone from outside',403));
   }
  
   // DEFINE RECEIVER 
@@ -41,7 +42,7 @@ router.post('/invite', verify(['admin','user']), async (req,res)=>{
 
   if (!receiver.length){
 
-    return res.status(400).send({body: 'invalid user, cant invite'});
+    return next(new AppError('Cant found receiver',404));
   }
 
   // CHECK SELF INVITATION
@@ -49,7 +50,7 @@ router.post('/invite', verify(['admin','user']), async (req,res)=>{
 
   if( receiver[0]._id == req.user.userId){
 
-    return res.status(400).send({body: 'cant invite yourself'});
+    return next(new AppError('cant invite yourself',409));
   }
 
   // CHECK ALREADY INVITED
@@ -58,7 +59,7 @@ router.post('/invite', verify(['admin','user']), async (req,res)=>{
 
   if (checkExisting){
 
-    return res.status(400).send({body: 'request already exists'});
+    return next(new AppError('request already exists',400));
   }
 
   // CHECK ALREADY IN EVENT
@@ -67,8 +68,7 @@ router.post('/invite', verify(['admin','user']), async (req,res)=>{
 
   if (alreadyInEvent.length){
 
-    console.log('this person already confirmed this event');
-    return res.status(400).send({body: 'this person already confirmed this event!'});
+    return next(new AppError('this person already confirmed this event!',400));
   }
 
   // CREATE RESPONSE DATA
@@ -87,12 +87,12 @@ router.post('/invite', verify(['admin','user']), async (req,res)=>{
       
     const d = await EventRequest.create(data);
     console.log('Invitation saved succesfully');  
-    return res.status(200).send({body: d, message: 'Invitation sent!'});
+    return res.status(200).send({body: d, message: `Invitation sent to ${receiver._id}!`});
   }
   catch(err){
       
     console.log('failed to save the Invitation', err);
-    return res.status(400).send({body: err.message});
+    return next(new AppError(`failed to save the event. error message: ${err.message}`,400));
   }
 });
 

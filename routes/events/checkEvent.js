@@ -5,35 +5,29 @@ const AppError = require('../../AppError');
 
 router.get('/check',verify(['admin','user']), async (req,res,next)=> {
 
- 
-
   try{
 
     let checkedEvent = await Event.findById(req.query.id);
 
-    console.log(checkedEvent);
+    console.log('checkedevent:' , checkedEvent);
 
-
+    //CHECK USER IN EVENT
+    if(!checkedEvent.participants.includes(req.user.userId)){
+      return next(new AppError('User not found in event', 404));
+    }
     if(checkedEvent.posts.length){
 
-      let populated = await Event.findById(req.query.id).populate('posts', '-_id -__v');
-
-      console.log(populated);
+      let populated = await Event
+        .findById(req.query.id)
+        .populate('posts')
+        .populate('participants')
+        .exec();
 
       return res.status(200).send({body: populated, message: 'request succesfull!', });
-
     }
-
-    console.log(checkedEvent);
-
-
-    // GET EVENTS
-
-    return res.status(200).send({body: checkedEvent, message: 'request succesfull!', });
-  }
-    
+  }   
   catch(err){
-    return next(new AppError('Cannot find event', 404));
+    return next(new AppError(`Cannot find event... ${err.message}`, 404));
   }
     
 });

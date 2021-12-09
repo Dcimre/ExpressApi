@@ -2,9 +2,9 @@ const router = require ('express').Router();
 const verify = require ('../verifyToken');
 const Group  = require ('../../model/Group');
 const Post = require('../../model/Post');
+const AppError = require('../../AppError');
 
-
-router.patch('/post', verify(['admin','user']), async (req,res)=>{
+router.patch('/post', verify(['admin','user']), async (req,res,next)=>{
 
   let userInGroup = await Group.find({ _id : req.body.groupId,members:req.user.userId});
 
@@ -12,7 +12,7 @@ router.patch('/post', verify(['admin','user']), async (req,res)=>{
 
   if(!userInGroup.length){
 
-    return res.status(400).send({body: 'You are not allowed to post into this group'});
+    return next(new AppError('You are not allowed to post into this group',403));
   }
 
   // CREATE EVENT DATA
@@ -22,7 +22,6 @@ router.patch('/post', verify(['admin','user']), async (req,res)=>{
             title: req.body.title,
             author: req.user.userId,
             article: req.body.article,
-            
           }; 
   try{ 
 
@@ -34,11 +33,10 @@ router.patch('/post', verify(['admin','user']), async (req,res)=>{
     // CHECK FOR DUPLICATION
 
     const post = await Post.findOne(data);
-
     const thisGroup = await Group.findOne({_id:req.body.groupId});
 
     if(thisGroup.posts.includes(post._id)){
-      return res.status(400).send({body: 'Post already Created!'});
+      return next(new AppError('Post already Created!',400));
 
     }
 
@@ -55,7 +53,7 @@ router.patch('/post', verify(['admin','user']), async (req,res)=>{
   catch(err){
       
     console.log('failed to post', err);
-    return res.status(400).send({body: err.message});
+    return next(new AppError(`failed to post into Group. error message: ${err.message}`,400));
   }
 });
   

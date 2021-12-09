@@ -4,7 +4,7 @@ module.exports = (permission)=>{
     
   return (req, res, next)=>{
 
-    const token = req.header('auth-token');
+    const token = req.header('Bearer-token');
     if (!token){
       return res.status(401).send ('Access denied!');
     }
@@ -31,7 +31,7 @@ module.exports = (permission)=>{
       }
     }
     catch(err){
-      res.status(400).send({body:'Invalid token!'});
+      res.status(400).send({body:'Invalid, or missing token!'});
     }};
 };
 

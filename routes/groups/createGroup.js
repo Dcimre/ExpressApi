@@ -2,11 +2,12 @@ const router = require ('express').Router();
 const verify = require ('../verifyToken');
 const Group = require('../../model/Group');
 const User = require('../../model/User');
+const AppError = require('../../AppError');
 
 console.log('nyenye');
 
 
-router.post('/', verify(['admin','user']), async (req,res)=>{
+router.post('/', verify(['admin','user']), async (req,res,next)=>{
 
 
   console.log('user:', req.user.userId);
@@ -15,7 +16,7 @@ router.post('/', verify(['admin','user']), async (req,res)=>{
   
   const groupExist = await Group.findOne({name: req.body.name});
   if (groupExist){
-    return res.status(400).send({body: { message:'name occupied by another group'}});
+    return next(new AppError('name occupied by another Group',400));
   }
 
   // CREATE GROUP DATA
@@ -32,7 +33,7 @@ router.post('/', verify(['admin','user']), async (req,res)=>{
     // SAVE GROUP TO DATABASE
       
     const d = await Group.create(data);
-    console.log('group saved succesfully');  
+    console.log('Group saved succesfully');  
 
     // PUSH GROUP INTO THE CREATORS MODEL
 
@@ -43,13 +44,13 @@ router.post('/', verify(['admin','user']), async (req,res)=>{
       { $push: { groups: group._id }}
     );
 
-    return res.status(200).send({body: d, message: 'Event Created!'});
+    return res.status(200).send({body: d, message: 'Group Created!'});
       
   }
   catch(err){
       
     console.log('failed to save event', err);
-    return res.status(400).send({body: err.message});
+    return next(new AppError(`failed to save Group. Error message: ${err.message}`,400));
   }
 });
 

@@ -3,9 +3,9 @@ const verify = require ('../../routes/verifyToken');
 const GroupRequest  = require ('../../model/groupRequest');
 const User = require('../../model/User');
 const Group  = require ('../../model/Group');
+const AppError = require('../../AppError');
 
-
-router.patch('/confirm', verify(['admin','user']), async (req,res)=>{
+router.patch('/confirm', verify(['admin','user']), async (req,res,next)=>{
 
   const sender = await User.findOne({email:req.body.email});
   const receiver = await User.findOne({_id:req.user.userId});
@@ -17,13 +17,13 @@ router.patch('/confirm', verify(['admin','user']), async (req,res)=>{
 
   if (sender.email == receiver.email){
 
-    return res.status(400).send({body: 'cant confirm your own Invitation!'});
+    return next(new AppError('cant confirm your own Invitation!',400));
   }
 
   // CHECK SENDER / RECEIVER EXISTENCE
 
   if(!sender || !receiver){
-    return res.status(400).send({body: 'sender or receiver not found'});
+    return next(new AppError('sender or receiver not found',404));
   }
 
   // CHECK INVITATION
@@ -32,7 +32,7 @@ router.patch('/confirm', verify(['admin','user']), async (req,res)=>{
 
 
   if(!gRequest.length){
-    return res.status(400).send({body:'Invitation not found'});
+    return next(new AppError('Invitation not found',404));
   }
 
   try{ 
@@ -51,19 +51,16 @@ router.patch('/confirm', verify(['admin','user']), async (req,res)=>{
       { $push: { members: receiver._id}}
     );
 
-
     // DELETE REQUEST FROM THE DB
 
     await GroupRequest.remove({ _id:gRequest[0]._id });
-
-    console.log('Invitation confirmed succesfully');  
     return res.status(200).send({message: 'Confirmation sent!'});
           
   }
   catch(err){
           
     console.log('failed to confirm the Invitation', err);
-    return res.status(400).send({body: err.message});
+    return next(new AppError(`failed to confirm the Invitation. error message: ${err.message}`,400));
   }
 });
     

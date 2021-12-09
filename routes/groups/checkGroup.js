@@ -8,7 +8,7 @@ router.get('/check',verify(['admin','user']), (async (req,res,next)=> {
 
   if (req.query.id =='' || req.query.id == undefined){
 
-    next(new AppError('Missing ID', 404));
+    next(new AppError('Missing Event', 404));
 
   }
 

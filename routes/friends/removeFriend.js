@@ -1,9 +1,9 @@
 const router = require ('express').Router();
 const verify = require ('../verifyToken');
 const User = require('../../model/User');
+const AppError = require('../../AppError');
 
-
-router.delete('/', verify(['admin','user']), async (req,res)=>{
+router.delete('/', verify(['admin','user']), async (req,res,next)=>{
 
 
   // DEFINE VICTIM
@@ -12,7 +12,7 @@ router.delete('/', verify(['admin','user']), async (req,res)=>{
 
   if(!victim.length){
 
-    return res.status(400).send({body: 'invalid email'});
+    return next(new AppError('try valid user',404));
   }
 
   console.log('victim: ' , victim[0].name);
@@ -23,7 +23,7 @@ router.delete('/', verify(['admin','user']), async (req,res)=>{
 
   if(!initiator.friendList.includes(victim[0]._id)){
  
-    return res.status(400).send({body: `${victim[0].name} is not yor friend`});
+    return next(new AppError('user is not yor friend',403));
   }
  
   try{ 
@@ -39,7 +39,7 @@ router.delete('/', verify(['admin','user']), async (req,res)=>{
   catch(err){
       
     console.log('failed to delete friend', err);
-    return res.status(400).send({body: err.message});
+    return next(new AppError(`failed to delete friend. error message:${err.message}`,400));
   }
 });
   

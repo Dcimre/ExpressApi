@@ -2,8 +2,9 @@ const router = require ('express').Router();
 const verify = require ('../verifyToken');
 const User = require('../../model/User');
 const Group = require('../../model/Group');
+const AppError = require('../../AppError');
 
-router.patch('/', verify(['admin','user']), async (req,res)=>{
+router.patch('/', verify(['admin','user']), async (req,res,next)=>{
 
 
   // DEFINE GROUP
@@ -15,7 +16,7 @@ router.patch('/', verify(['admin','user']), async (req,res)=>{
 
   if(!group.length){
 
-    return res.status(400).send({body: 'invalid Group Id'});
+    return next(new AppError('Group not found',404));
   }
 
   console.log('selected event: ', group[0].name);
@@ -30,7 +31,7 @@ router.patch('/', verify(['admin','user']), async (req,res)=>{
 
   if(!userInEvent.length){
 
-    return res.status(400).send({body: 'Victim not part of this event'});
+    return next(new AppError('Victim not part of this event',404));
   }
 
 
@@ -38,7 +39,7 @@ router.patch('/', verify(['admin','user']), async (req,res)=>{
 
   if(group.creator !== req.user.userId){
 
-    return res.status(400).send('Only the creator can remove a user from the event');
+    return next(new AppError('Only the creator can remove a user from the event',403));
   }
 
 
@@ -63,7 +64,7 @@ router.patch('/', verify(['admin','user']), async (req,res)=>{
   catch(err){
       
     console.log('failed to remove event', err);
-    return res.status(400).send({body: err.message});
+    return next(new AppError(`failed to remove event. error message: ${err.message}`),400);
   }
 });
   

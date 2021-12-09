@@ -36,6 +36,7 @@ mongoose.connect(
   ()=> console.log('we are connected to the DB !')
 );
 
+
 // MIDDLEWARES
 
 app.use(express.json());

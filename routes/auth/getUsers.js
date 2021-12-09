@@ -26,35 +26,27 @@ router.get('/',verify(['admin']), async (req,res,next)=> {
     offset = req.query.page * req.query.limit - req.query.limit;
     limit = parseInt(req.query.limit);
   }
-  
   let where = {};
-
   let search = req.query.search;
 
   // FILTERING 
-
 
   if (req.query.name && req.query.name !== '' && req.query.name !== 'undefined'){
   
     where.name = req.query.name;
   }
-  
   if (req.query.email && req.query.email !== '' && req.query.email !== 'undefined'){
   
     where.email = req.query.email;
   }
-  
   if (req.query._id && req.query._id !== ''){
   
     where._id = req.query._id;
   }
-  
   // GET SEARCHED EVENTS
   
   try{
-
     
-
     let query = await User
       .find(where)
       .populate('friendList', 'name',)
@@ -63,7 +55,6 @@ router.get('/',verify(['admin']), async (req,res,next)=> {
       .skip(offset)
       .limit(limit)
       .sort(order);
-
 
     let data = {
       rows: query,
@@ -89,16 +80,11 @@ router.get('/',verify(['admin']), async (req,res,next)=> {
       data.rows = searched;
       data.count = count;
     }
-    
     return res.status(200).send({body: data, message: 'request succesful'});
   }
   catch(err){
     return next(new AppError('Cant find User on this server', 404));
   }
   
-    
 });
-
-
-
 module.exports = router;
